@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotel Najah Hurahman</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2622;--mut:#7a7068;--gold:#b08a4a;--dark:#1f2a37;--line:#e8e1d6;--ok:#2e7d4f;--warn:#c47f17;--bad:#b3392f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--ink);line-height:1.5}
+h1,h2,h3{font-weight:600;margin:0 0 .5rem}
+button,input,select,textarea{font:inherit}
+header{background:var(--dark);color:#fff;position:sticky;top:0;z-index:5}
+.bar{max-width:1100px;margin:auto;padding:.8rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.logo{font-size:1.25rem;letter-spacing:.04em;margin-right:auto}
+.logo span{color:var(--gold)}
+nav{display:flex;gap:.25rem;flex-wrap:wrap}
+nav button{background:none;border:0;color:#d6d3cd;padding:.45rem .8rem;cursor:pointer;border-radius:6px;font-family:inherit}
+nav button:hover,nav button.on{background:rgba(255,255,255,.1);color:#fff}
+main{max-width:1100px;margin:auto;padding:1.5rem 1rem 4rem}
+.hero{background:linear-gradient(120deg,#1f2a37,#3a4a5e);color:#fff;border-radius:14px;padding:3rem 2rem;margin-bottom:2rem}
+.hero h1{font-size:2.2rem}.hero p{max-width:540px;color:#e3e0da}
+.btn{background:var(--gold);color:#fff;border:0;padding:.6rem 1.1rem;border-radius:8px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:#eee8dc;color:var(--ink)}.btn.bad{background:var(--bad)}.btn.sm{padding:.25rem .6rem;font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+.price{color:var(--gold);font-size:1.25rem;font-weight:600}
+.mut{color:var(--mut);font-size:.9rem}
+.tag{display:inline-block;padding:.1rem .55rem;border-radius:99px;font-size:.78rem;background:#eee8dc}
+.tag.ok{background:#dff1e5;color:var(--ok)}.tag.warn{background:#faecd2;color:var(--warn)}.tag.bad{background:#f6dcd9;color:var(--bad)}
+form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:.8rem}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:.2rem}
+input,select,textarea{width:100%;padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:.92rem}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{background:#f3eee4;font-weight:600}
+.scroll{overflow-x:auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat b{display:block;font-size:1.6rem}
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.tabs button{padding:.4rem .9rem;border:1px solid var(--line);background:#fff;border-radius:99px;cursor:pointer}
+.tabs button.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.sec-title{margin:2rem 0 1rem}
+.stars{color:var(--gold);letter-spacing:2px}
+#toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:.7rem 1.2rem;border-radius:8px;display:none;z-index:9}
+.hide{display:none}
+footer{text-align:center;color:var(--mut);font-size:.85rem;padding:2rem 1rem}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="logo">Hotel <span>Najah Hurahman</span></div>
+  <nav id="nav"></nav>
+</div></header>
+<main id="app"></main>
+<footer>© Hotel Najah Hurahman — demo statis untuk GitHub Pages (data tersimpan di browser)</footer>
+<div id="toast"></div>
+
+<script>
+/* ===== Penyimpanan (meniru tabel SQL: bookings, feedback, kamar, resepsionis, reservasi_offline, tipe_kamar) ===== */
+const KEY='hotel_najah_hurahman_v1';
+let mem=null;
+function today(d=0){const t=new Date();t.setDate(t.getDate()+d);return t.toISOString().slice(0,10)}
+function seed(){return{
+  tipe_kamar:[
+    {id_tipe:1,nama_tipe:'Standard',harga_per_malam:350000,kapasitas:2,deskripsi:'Kamar nyaman dengan AC, TV, dan kamar mandi dalam.'},
+    {id_tipe:2,nama_tipe:'Deluxe',harga_per_malam:550000,kapasitas:3,deskripsi:'Kamar luas dengan tempat tidur king, sarapan, dan pemandangan kota.'},
+    {id_tipe:3,nama_tipe:'Suite',harga_per_malam:950000,kapasitas:4,deskripsi:'Suite keluarga dengan ruang tamu terpisah dan bathtub.'}],
+  kamar:[
+    {id_kamar:1,nomor_kamar:'101',lantai:1,tipe_kamar:'Standard',status:'Tersedia'},
+    {id_kamar:2,nomor_kamar:'102',lantai:1,tipe_kamar:'Standard',status:'Terisi'},
+    {id_kamar:3,nomor_kamar:'103',lantai:1,tipe_kamar:'Standard',status:'Tersedia'},
+    {id_kamar:4,nomor_kamar:'201',lantai:2,tipe_kamar:'Deluxe',status:'Tersedia'},
+    {id_kamar:5,nomor_kamar:'202',lantai:2,tipe_kamar:'Deluxe',status:'Perbaikan'},
+    {id_kamar:6,nomor_kamar:'301',lantai:3,tipe_kamar:'Suite',status:'Tersedia'}],
+  bookings:[
+    {id:1,nama_pelanggan:'Budi Santoso',layanan:'Deluxe',tanggal_booking:today(1),status_pembayaran:'Sudah Terbayar',jumlah_tamu:2,check_in_time:null,check_out_time:null,created_at:today()},
+    {id:2,nama_pelanggan:'Siti Aminah',layanan:'Standard',tanggal_booking:today(2),status_pembayaran:'Belum Terbayar',jumlah_tamu:1,check_in_time:null,check_out_time:null,created_at:today()}],
+  feedback:[
+    {id:1,nama:'Rina',email:'rina@example.com',rating:5,pesan:'Pelayanan ramah dan kamar sangat bersih!',tanggal:today(-3)},
+    {id:2,nama:'Andi',email:'andi@example.com',rating:4,pesan:'Lokasi strategis, sarapan enak.',tanggal:today(-1)}],
+  resepsionis:[{id:1,username:'admin',password:'admin123',nama_lengkap:'Resepsionis Utama'}],
+  reservasi_offline:[
+    {id_reservasi:1,nama_pelanggan:'Hendra',nomor_telepon:'081234567890',tanggal_reservasi:today(),jam_reservasi:'14:00',jumlah_orang:2,total_biaya:700000,status_pembayaran:'DP (Down Payment)',metode_pembayaran:'Tunai',catatan:'Minta lantai atas',jumlah_tamu:2}]
+}}
+function load(){
+  if(mem) return mem;
+  try{const r=localStorage.getItem(KEY); if(r){mem=JSON.parse(r);return mem}}catch(e){}
+  mem=seed();return mem;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}}
+function nextId(arr,k='id'){return arr.reduce((m,x)=>Math.max(m,x[k]),0)+1}
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp=n=>'Rp '+Number(n).toLocaleString('id-ID');
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2500)}
+const $=id=>document.getElementById(id);
+
+/* ===== Router ===== */
+let view='home', adminTab='dash', admin=false;
+try{admin=sessionStorage.getItem('adm')==='1'}catch(e){}
+function go(v){view=v;render();window.scrollTo(0,0)}
+function renderNav(){
+  const items=[['home','Beranda'],['kamar','Kamar'],['booking','Pesan'],['feedback','Ulasan'],[admin?'admin':'login',admin?'Dashboard':'Resepsionis']];
+  $('nav').innerHTML=items.map(([k,l])=>`<button class="${view===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('')+(admin?`<button onclick="logout()">Keluar</button>`:'');
+}
+function render(){
+  renderNav();
+  const v={home,kamar,booking,feedback,login,admin:adminView}[view];
+  $('app').innerHTML=(view==='admin'&&!admin)?(view='login',login()):v();
+  if(view==='admin'&&!admin){}
+}
+
+/* ===== Halaman publik ===== */
+function tipeCards(){
+  const d=load();
+  return d.tipe_kamar.map(t=>{
+    const free=d.kamar.filter(k=>k.tipe_kamar===t.nama_tipe&&k.status==='Tersedia').length;
+    return `<div class="card"><h3>${E(t.nama_tipe)}</h3><div class="price">${rp(t.harga_per_malam)} <span class="mut">/ malam</span></div>
+    <p class="mut">${E(t.deskripsi)}</p><p>Kapasitas: ${t.kapasitas} orang<br><span class="tag ${free?'ok':'bad'}">${free} kamar tersedia</span></p>
+    <button class="btn" ${free?'':'disabled'} onclick="go('booking');setTimeout(()=>$('b_layanan').value='${E(t.nama_tipe)}')">Pesan</button></div>`}).join('');
+}
+function home(){
+  const d=load();
+  const avg=d.feedback.length?(d.feedback.reduce((s,f)=>s+f.rating,0)/d.feedback.length).toFixed(1):'-';
+  return `<section class="hero"><h1>Selamat datang di Hotel Najah Hurahman</h1>
+  <p>Menginap nyaman dengan pelayanan sepenuh hati. Pilih tipe kamar, pesan online, dan kami siapkan kedatangan Anda.</p>
+  <button class="btn" onclick="go('booking')">Pesan Sekarang</button></section>
+  <h2>Tipe Kamar</h2><div class="grid">${tipeCards()}</div>
+  <h2 class="sec-title">Kata Tamu Kami <span class="mut">(rata-rata ${avg} / 5)</span></h2>
+  <div class="grid">${d.feedback.slice(-3).reverse().map(fbCard).join('')}</div>`;
+}
+function kamar(){
+  const d=load();
+  const cls={Tersedia:'ok',Terisi:'warn',Perbaikan:'bad'};
+  return `<h2>Tipe & Ketersediaan Kamar</h2><div class="grid">${tipeCards()}</div>
+  <h2 class="sec-title">Daftar Kamar</h2><div class="scroll"><table><tr><th>No.</th><th>Lantai</th><th>Tipe</th><th>Status</th></tr>
+  ${d.kamar.map(k=>`<tr><td>${E(k.nomor_kamar)}</td><td>${k.lantai}</td><td>${E(k.tipe_kamar)}</td><td><span class="tag ${cls[k.status]}">${k.status}</span></td></tr>`).join('')}</table></div>`;
+}
+function booking(){
+  const d=load();
+  return `<h2>Pesan Kamar</h2><div class="card"><form onsubmit="return submitBooking(event)">
+  <div class="row"><div><label>Nama Lengkap</label><input id="b_nama" required maxlength="100"></div>
+  <div><label>Tipe Kamar</label><select id="b_layanan">${d.tipe_kamar.map(t=>`<option>${E(t.nama_tipe)}</option>`).join('')}</select></div></div>
+  <div class="row"><div><label>Tanggal Check-in</label><input type="date" id="b_tgl" required min="${today()}" value="${today(1)}"></div>
+  <div><label>Jumlah Tamu</label><input type="number" id="b_tamu" min="1" max="10" value="1" required></div></div>
+  <button class="btn">Kirim Pemesanan</button></form></div>`;
+}
+function submitBooking(e){
+  e.preventDefault();const d=load();
+  const layanan=$('b_layanan').value;
+  if(!d.kamar.some(k=>k.tipe_kamar===layanan&&k.status==='Tersedia')){toast('Maaf, kamar tipe ini penuh');return false}
+  d.bookings.push({id:nextId(d.bookings),nama_pelanggan:$('b_nama').value.trim(),layanan,tanggal_booking:$('b_tgl').value,
+    status_pembayaran:'Belum Terbayar',jumlah_tamu:+$('b_tamu').value,check_in_time:null,check_out_time:null,created_at:today()});
+  save();toast('Pemesanan berhasil! Silakan lakukan pembayaran di resepsionis.');go('home');return false;
+}
+function fbCard(f){return `<div class="card"><div class="stars">${'★'.repeat(f.rating)}${'☆'.repeat(5-f.rating)}</div><p>${E(f.pesan)}</p><div class="mut">— ${E(f.nama)}, ${E(f.tanggal)}</div></div>`}
+function feedback(){
+  const d=load();
+  return `<h2>Ulasan Tamu</h2><div class="card"><form onsubmit="return submitFb(event)">
+  <div class="row"><div><label>Nama</label><input id="f_nama" required maxlength="100"></div><div><label>Email</label><input type="email" id="f_email" required maxlength="100"></div>
+  <div><label>Rating</label><select id="f_rating"><option value="5">5 - Sangat baik</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div></div>
+  <div style="margin-bottom:.8rem"><label>Pesan</label><textarea id="f_pesan" rows="3" required></textarea></div><button class="btn">Kirim Ulasan</button></form></div>
+  <h3 class="sec-title">Semua Ulasan</h3><div class="grid">${d.feedback.slice().reverse().map(fbCard).join('')}</div>`;
+}
+function submitFb(e){
+  e.preventDefault();const d=load();
+  d.feedback.push({id:nextId(d.feedback),nama:$('f_nama').value.trim(),email:$('f_email').value.trim(),rating:+$('f_rating').value,pesan:$('f_pesan').value.trim(),tanggal:today()});
+  save();toast('Terima kasih atas ulasan Anda!');render();return false;
+}
+
+/* ===== Login resepsionis ===== */
+function login(){
+  return `<h2>Login Resepsionis</h2><div class="card" style="max-width:380px"><form onsubmit="return doLogin(event)">
+  <div style="margin-bottom:.8rem"><label>Username</label><input id="l_u" required></div>
+  <div style="margin-bottom:.8rem"><label>Password</label><input id="l_p" type="password" required></div>
+  <button class="btn">Masuk</button><p class="mut">Demo: admin / admin123<br>(Login ini hanya simulasi di sisi browser, bukan keamanan sungguhan.)</p></form></div>`;
+}
+function doLogin(e){
+  e.preventDefault();const d=load();
+  const u=d.resepsionis.find(r=>r.username===$('l_u').value&&r.password===$('l_p').value);
+  if(!u){toast('Username atau password salah');return false}
+  admin=true;try{sessionStorage.setItem('adm','1')}catch(x){}
+  go('admin');return false;
+}
+function logout(){admin=false;try{sessionStorage.removeItem('adm')}catch(e){}go('home')}
+
+/* ===== Dashboard ===== */
+function adminView(){
+  const tabs=[['dash','Ringkasan'],['kmr','Kamar'],['bk','Booking Online'],['off','Reservasi Offline'],['tipe','Harga'],['fb','Ulasan']];
+  return `<h2>Dashboard Resepsionis</h2><div class="tabs">${tabs.map(([k,l])=>`<button class="${adminTab===k?'on':''}" onclick="adminTab='${k}';render()">${l}</button>`).join('')}</div>${tabHtml()}`;
+}
+function tabHtml(){
+  const d=load();
+  if(adminTab==='dash'){
+    const c=s=>d.kamar.filter(k=>k.status===s).length;
+    const income=d.bookings.filter(b=>b.status_pembayaran==='Sudah Terbayar').length;
+    const offIncome=d.reservasi_offline.filter(r=>r.status_pembayaran==='Sudah Terbayar').reduce((s,r)=>s+ +r.total_biaya,0);
+    return `<div class="stats">
+    <div class="card stat"><span class="mut">Kamar tersedia</span><b>${c('Tersedia')}</b></div>
+    <div class="card stat"><span class="mut">Kamar terisi</span><b>${c('Terisi')}</b></div>
+    <div class="card stat"><span class="mut">Perbaikan</span><b>${c('Perbaikan')}</b></div>
+    <div class="card stat"><span class="mut">Booking online</span><b>${d.bookings.length}</b></div>
+    <div class="card stat"><span class="mut">Booking belum bayar</span><b>${d.bookings.length-income}</b></div>
+    <div class="card stat"><span class="mut">Pemasukan offline (lunas)</span><b>${rp(offIncome)}</b></div></div>
+    <button class="btn sec" onclick="resetData()">Reset data demo</button>`;
+  }
+  if(adminTab==='kmr'){
+    return `<div class="card" style="margin-bottom:1rem"><form onsubmit="return addKamar(event)"><div class="row">
+    <div><label>No. Kamar</label><input id="k_no" required maxlength="10"></div><div><label>Lantai</label><input id="k_lt" type="number" min="1" required></div>
+    <div><label>Tipe</label><select id="k_tp">${d.tipe_kamar.map(t=>`<option>${E(t.nama_tipe)}</option>`).join('')}</select></div></div><button class="btn">Tambah Kamar</button></form></div>
+    <div class="scroll"><table><tr><th>No.</th><th>Lantai</th><th>Tipe</th><th>Status</th><th></th></tr>${d.kamar.map(k=>`<tr><td>${E(k.nomor_kamar)}</td><td>${k.lantai}</td><td>${E(k.tipe_kamar)}</td>
+    <td><select onchange="setKamar(${k.id_kamar},this.value)">${['Tersedia','Terisi','Perbaikan'].map(s=>`<option ${s===k.status?'selected':''}>${s}</option>`).join('')}</select></td>
+    <td><button class="btn bad sm" onclick="del('kamar','id_kamar',${k.id_kamar})">Hapus</button></td></tr>`).join('')}</table></div>`;
+  }
+  if(adminTab==='bk'){
+    return `<div class="scroll"><table><tr><th>#</th><th>Nama</th><th>Tipe</th><th>Tanggal</th><th>Tamu</th><th>Bayar</th><th>Check-in</th><th>Check-out</th><th></th></tr>
+    ${d.bookings.map(b=>`<tr><td>${b.id}</td><td>${E(b.nama_pelanggan)}</td><td>${E(b.layanan)}</td><td>${E(b.tanggal_booking)}</td><td>${b.jumlah_tamu}</td>
+    <td><span class="tag ${b.status_pembayaran==='Sudah Terbayar'?'ok':'warn'}">${b.status_pembayaran}</span><br><button class="btn sec sm" onclick="togglePay(${b.id})">Ubah</button></td>
+    <td>${b.check_in_time?E(b.check_in_time):`<button class="btn sm" onclick="stamp(${b.id},'check_in_time')">Check-in</button>`}</td>
+    <td>${b.check_out_time?E(b.check_out_time):(b.check_in_time?`<button class="btn sm" onclick="stamp(${b.id},'check_out_time')">Check-out</button>`:'-')}</td>
+    <td><button class="btn bad sm" onclick="del('bookings','id',${b.id})">Hapus</button></td></tr>`).join('')||'<tr><td colspan="9">Belum ada booking</td></tr>'}</table></div>`;
+  }
+  if(adminTab==='off'){
+    return `<div class="card" style="margin-bottom:1rem"><form onsubmit="return addOff(event)"><div class="row">
+    <div><label>Nama</label><input id="o_nama" required></div><div><label>Telepon</label><input id="o_tel" required></div>
+    <div><label>Tanggal</label><input id="o_tgl" type="date" value="${today()}" required></div><div><label>Jam</label><input id="o_jam" type="time" value="14:00" required></div>
+    <div><label>Jumlah Orang</label><input id="o_org" type="number" min="1" value="1" required></div><div><label>Total Biaya (Rp)</label><input id="o_biaya" type="number" min="0" required></div>
+    <div><label>Status Bayar</label><select id="o_st"><option>Belum Terbayar</option><option>Sudah Terbayar</option><option>DP (Down Payment)</option></select></div>
+    <div><label>Metode</label><select id="o_mt"><option>Tunai</option><option>Transfer</option><option>QRIS</option></select></div></div>
+    <div style="margin-bottom:.8rem"><label>Catatan</label><input id="o_cat"></div><button class="btn">Simpan Reservasi</button></form></div>
+    <div class="scroll"><table><tr><th>#</th><th>Nama</th><th>Telepon</th><th>Waktu</th><th>Orang</th><th>Total</th><th>Status</th><th>Metode</th><th>Catatan</th><th></th></tr>
+    ${d.reservasi_offline.map(r=>`<tr><td>${r.id_reservasi}</td><td>${E(r.nama_pelanggan)}</td><td>${E(r.nomor_telepon)}</td><td>${E(r.tanggal_reservasi)} ${E(r.jam_reservasi)}</td><td>${r.jumlah_orang}</td><td>${rp(r.total_biaya)}</td>
+    <td>${E(r.status_pembayaran)}</td><td>${E(r.metode_pembayaran)}</td><td>${E(r.catatan)}</td><td><button class="btn bad sm" onclick="del('reservasi_offline','id_reservasi',${r.id_reservasi})">Hapus</button></td></tr>`).join('')||'<tr><td colspan="10">Kosong</td></tr>'}</table></div>`;
+  }
+  if(adminTab==='tipe'){
+    return `<div class="scroll"><table><tr><th>Tipe</th><th>Harga / malam</th><th>Kapasitas</th><th></th></tr>${d.tipe_kamar.map(t=>`<tr><td>${E(t.nama_tipe)}</td>
+    <td><input type="number" id="h${t.id_tipe}" value="${t.harga_per_malam}" min="0" step="10000"></td><td>${t.kapasitas}</td><td><button class="btn sm" onclick="setHarga(${t.id_tipe})">Simpan</button></td></tr>`).join('')}</table></div>`;
+  }
+  return `<div class="scroll"><table><tr><th>Tanggal</th><th>Nama</th><th>Email</th><th>Rating</th><th>Pesan</th><th></th></tr>${d.feedback.map(f=>`<tr><td>${E(f.tanggal)}</td><td>${E(f.nama)}</td><td>${E(f.email)}</td>
+  <td class="stars">${'★'.repeat(f.rating)}</td><td>${E(f.pesan)}</td><td><button class="btn bad sm" onclick="del('feedback','id',${f.id})">Hapus</button></td></tr>`).join('')||'<tr><td colspan="6">Kosong</td></tr>'}</table></div>`;
+}
+function del(tbl,key,id){if(!confirm('Hapus data ini?'))return;const d=load();d[tbl]=d[tbl].filter(x=>x[key]!==id);save();render()}
+function setKamar(id,s){const d=load();d.kamar.find(k=>k.id_kamar===id).status=s;save();toast('Status diperbarui')}
+function addKamar(e){e.preventDefault();const d=load();const no=$('k_no').value.trim();
+  if(d.kamar.some(k=>k.nomor_kamar===no)){toast('Nomor kamar sudah ada');return false}
+  d.kamar.push({id_kamar:nextId(d.kamar,'id_kamar'),nomor_kamar:no,lantai:+$('k_lt').value,tipe_kamar:$('k_tp').value,status:'Tersedia'});save();render();return false}
+function togglePay(id){const d=load();const b=d.bookings.find(x=>x.id===id);b.status_pembayaran=b.status_pembayaran==='Sudah Terbayar'?'Belum Terbayar':'Sudah Terbayar';save();render()}
+function stamp(id,f){const d=load();d.bookings.find(x=>x.id===id)[f]=new Date().toLocaleString('id-ID');save();render()}
+function addOff(e){e.preventDefault();const d=load();
+  d.reservasi_offline.push({id_reservasi:nextId(d.reservasi_offline,'id_reservasi'),nama_pelanggan:$('o_nama').value.trim(),nomor_telepon:$('o_tel').value.trim(),tanggal_reservasi:$('o_tgl').value,jam_reservasi:$('o_jam').value,
+  jumlah_orang:+$('o_org').value,total_biaya:+$('o_biaya').value,status_pembayaran:$('o_st').value,metode_pembayaran:$('o_mt').value,catatan:$('o_cat').value.trim(),jumlah_tamu:+$('o_org').value});
+  save();toast('Reservasi disimpan');render();return false}
+function setHarga(id){const d=load();d.tipe_kamar.find(t=>t.id_tipe===id).harga_per_malam=+$('h'+id).value;save();toast('Harga diperbarui')}
+function resetData(){if(!confirm('Kembalikan semua data ke contoh awal?'))return;mem=seed();save();render();toast('Data direset')}
+
+render();
+</script>
+</body>
+</html>
